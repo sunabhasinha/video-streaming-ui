@@ -1,14 +1,17 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ScreenSharePreview from './components/ScreenSharePreview';
-import CanvasOverlay from './components/CanvasOverlay'; // Import
+import CanvasOverlay from './components/CanvasOverlay';
+import { Provider } from 'react-redux'; // Import Provider
+import store from './redux/store';
 
 const App = () => (
-	<div>
-		<ScreenSharePreview />
-		<hr />
-		<CanvasOverlay />
-	</div>
+	<Provider store={store}>
+		<div>
+			<ScreenSharePreview />
+			<hr />
+			<CanvasOverlay />
+		</div>
+	</Provider>
 );
 
 const container = document.getElementById('root');
