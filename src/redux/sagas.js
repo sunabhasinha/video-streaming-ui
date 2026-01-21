@@ -1,4 +1,4 @@
-import { takeLatest, put, call } from 'redux-saga/effects';
+import { takeLatest, put, call, select } from 'redux-saga/effects';
 import {
 	START_SHARE_REQUEST,
 	STOP_SHARE_REQUEST,
@@ -14,23 +14,32 @@ function getDisplayMedia() {
 	});
 }
 
-// WORKER SAGA: Handles the Start Action
 function* handleStartShare() {
 	try {
 		const stream = yield call(getDisplayMedia);
-
 		yield put(startShareSuccess(stream));
 	} catch (error) {
 		yield put(startShareFailure(error.message));
 	}
 }
 
-// WORKER SAGA: Handles the Stop Action
+/**FIX: Physically stop the stream in the Saga */
 function* handleStopShare() {
+	try {
+		const stream = yield select((state) => state.stream);
+
+		if (stream) {
+			const tracks = stream.getTracks();
+			tracks.forEach((track) => track.stop());
+			console.log('Stream stopped by Saga.');
+		}
+	} catch (err) {
+		console.error('Error stopping stream:', err);
+	}
+
 	yield put(stopShareSuccess());
 }
 
-// WATCHER SAGA: Watches for dispatched actions
 export default function* rootSaga() {
 	yield takeLatest(START_SHARE_REQUEST, handleStartShare);
 	yield takeLatest(STOP_SHARE_REQUEST, handleStopShare);

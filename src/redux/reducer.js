@@ -5,6 +5,8 @@ import {
 	SET_TOOL,
 	SET_COLOR,
 	SET_STROKE_WIDTH,
+	ADD_STROKE,
+	UNDO,
 } from './actions';
 
 const initialState = {
@@ -14,6 +16,7 @@ const initialState = {
 	tool: 'pen',
 	color: 'red',
 	strokeWidth: 5,
+	history: [],
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -43,6 +46,17 @@ const rootReducer = (state = initialState, action) => {
 			return { ...state, color: action.payload };
 		case SET_STROKE_WIDTH:
 			return { ...state, strokeWidth: action.payload };
+		case ADD_STROKE:
+			return {
+				...state,
+				history: [...state.history, action.payload],
+			};
+
+		case UNDO:
+			return {
+				...state,
+				history: state.history.slice(0, -1),
+			};
 		default:
 			return state;
 	}
