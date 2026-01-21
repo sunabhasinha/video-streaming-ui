@@ -1,8 +1,15 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import ScreenSharePreview from './components/ScreenSharePreview';
+import CanvasOverlay from './components/CanvasOverlay'; // Import
 
-//testing environment setup
-const App = () => <h1>Environment Check: Success</h1>;
+const App = () => (
+	<div>
+		<ScreenSharePreview />
+		<hr />
+		<CanvasOverlay />
+	</div>
+);
 
 const container = document.getElementById('root');
 const root = createRoot(container);
