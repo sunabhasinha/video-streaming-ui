@@ -1,123 +1,149 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTool, setColor, setStrokeWidth, undo } from '../redux/actions';
-import { startShareRequest, stopShareRequest } from '../redux/actions';
+import { TOOLS, UI_TEXT } from '../constants';
+import {
+	setTool,
+	setColor,
+	setStrokeWidth,
+	startShareRequest,
+	stopShareRequest,
+	undo,
+	clearCanvas,
+	toggleAnnotation,
+} from '../redux/actions';
+import {
+	FaPen,
+	FaEraser,
+	FaUndo,
+	FaTrash,
+	FaRegSquare,
+	FaLongArrowAltRight,
+	FaHighlighter,
+	FaCamera,
+} from 'react-icons/fa';
+
+// Import our modular components
+import ToolbarButton from './ToolbarButton';
+import ToggleSwitch from './ToggleSwitch';
+import ColorPicker from './ColorPicker';
+import SizeSlider from './SizeSlider';
+import { takeSnapshot } from '../redux/actions';
 
 const Toolbar = () => {
 	const dispatch = useDispatch();
-	const { tool, color, strokeWidth } = useSelector((state) => state);
-
-	const styles = {
-		container: {
-			padding: '10px',
-			background: '#eee',
-			marginBottom: '10px',
-			display: 'flex',
-			gap: '20px',
-			justifyContent: 'center',
-			alignItems: 'center',
-			borderRadius: '8px',
-		},
-		button: (isActive) => ({
-			padding: '8px 16px',
-			border: 'none',
-			borderRadius: '4px',
-			background: isActive ? '#333' : '#ddd',
-			color: isActive ? '#fff' : '#000',
-			cursor: 'pointer',
-		}),
-	};
-
-	const { isSharing } = useSelector((state) => state);
+	const { isSharing, tool, color, strokeWidth, isAnnotationMode } = useSelector(
+		(state) => state
+	);
 
 	return (
-		<div style={styles.container}>
-			{/* New Start/Stop Section */}
-			<div
-				style={{
-					marginRight: '20px',
-					borderRight: '1px solid #ccc',
-					paddingRight: '20px',
-				}}
-			>
-				{!isSharing ? (
-					<button
-						onClick={() => dispatch(startShareRequest())}
-						style={{
-							...styles.button(false),
-							background: '#007bff',
-							color: 'white',
-						}}
-					>
-						Start Share
-					</button>
-				) : (
-					<button
-						onClick={() => dispatch(stopShareRequest())}
-						style={{
-							...styles.button(false),
-							background: '#dc3545',
-							color: 'white',
-						}}
-					>
-						Stop Share
-					</button>
-				)}
-			</div>
-			{/* 1. Tool Selectors */}
-			<div>
+		<div className="toolbar">
+			{/* 1. Start/Stop Actions */}
+			{!isSharing ? (
 				<button
-					style={styles.button(tool === 'pen')}
-					onClick={() => dispatch(setTool('pen'))}
+					className="btn-primary"
+					onClick={() => dispatch(startShareRequest())}
 				>
-					🖊️ Pen
+					{UI_TEXT.START_SHARE}
 				</button>
+			) : (
 				<button
-					style={styles.button(tool === 'eraser')}
-					onClick={() => dispatch(setTool('eraser'))}
-					className="ml-2"
+					className="btn-danger"
+					onClick={() => dispatch(stopShareRequest())}
 				>
-					🧼 Eraser
+					{UI_TEXT.STOP_SHARE}
 				</button>
-			</div>
-
-			{/* 2. Color Picker (Only show if not eraser) */}
-			{tool !== 'eraser' && (
-				<div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-					<label>Color:</label>
-					<input
-						type="color"
-						value={color}
-						onChange={(e) => dispatch(setColor(e.target.value))}
-					/>
-				</div>
 			)}
 
-			{/* 3. Stroke Width Slider */}
-			<div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-				<label>Size: {strokeWidth}px</label>
-				<input
-					type="range"
-					min="1"
-					max="20"
-					value={strokeWidth}
-					onChange={(e) => dispatch(setStrokeWidth(Number(e.target.value)))}
-				/>
-			</div>
-			<div style={{ marginLeft: 'auto' }}>
-				{' '}
-				{/* Push to right side */}
-				<button
-					onClick={() => dispatch(undo())}
-					style={{
-						...styles.button(false),
-						background: '#f8f9fa',
-						color: 'black',
-						border: '1px solid #ccc',
-					}}
+			<div className="separator"></div>
+
+			{/* 2. Mode Toggle */}
+			<ToggleSwitch
+				isOn={isAnnotationMode}
+				handleToggle={() => dispatch(toggleAnnotation())}
+				title={UI_TEXT.TOGGLE_MODE}
+			/>
+
+			<div className="separator"></div>
+
+			{/* 3. Drawing Tools Group */}
+			<div
+				style={{
+					display: 'flex',
+					gap: '10px',
+					opacity: isAnnotationMode ? 1 : 0.3,
+					pointerEvents: isAnnotationMode ? 'auto' : 'none',
+					transition: '0.3s',
+					alignItems: 'center',
+				}}
+			>
+				<ToolbarButton
+					isActive={tool === TOOLS.PEN}
+					onClick={() => dispatch(setTool(TOOLS.PEN))}
+					title={UI_TEXT.PEN_TOOL}
 				>
-					↩️ Undo
-				</button>
+					<FaPen size={16} />
+				</ToolbarButton>
+
+				<ToolbarButton
+					isActive={tool === TOOLS.ERASER}
+					onClick={() => dispatch(setTool(TOOLS.ERASER))}
+					title={UI_TEXT.ERASER_TOOL}
+				>
+					<FaEraser size={18} />
+				</ToolbarButton>
+
+				<ColorPicker
+					color={color}
+					onChange={(val) => dispatch(setColor(val))}
+					disabled={tool === TOOLS.ERASER}
+				/>
+
+				<SizeSlider
+					width={strokeWidth}
+					color={tool === TOOLS.ERASER ? '#fff' : color}
+					onChange={(val) => dispatch(setStrokeWidth(val))}
+				/>
+
+				<div className="separator" style={{ height: '16px' }}></div>
+
+				<ToolbarButton onClick={() => dispatch(undo())} title={UI_TEXT.UNDO}>
+					<FaUndo size={16} />
+				</ToolbarButton>
+
+				<ToolbarButton
+					onClick={() => dispatch(clearCanvas())}
+					title={UI_TEXT.CLEAR}
+				>
+					<FaTrash size={16} />
+				</ToolbarButton>
+				<ToolbarButton
+					isActive={tool === TOOLS.RECTANGLE}
+					onClick={() => dispatch(setTool(TOOLS.RECTANGLE))}
+					title={UI_TEXT.RECT_TOOL}
+				>
+					<FaRegSquare size={16} />
+				</ToolbarButton>
+
+				<ToolbarButton
+					isActive={tool === TOOLS.ARROW}
+					onClick={() => dispatch(setTool(TOOLS.ARROW))}
+					title={UI_TEXT.ARROW_TOOL}
+				>
+					<FaLongArrowAltRight size={16} />
+				</ToolbarButton>
+				<ToolbarButton
+					isActive={tool === TOOLS.HIGHLIGHTER}
+					onClick={() => dispatch(setTool(TOOLS.HIGHLIGHTER))}
+					title={UI_TEXT.HIGHLIGHTER_TOOL}
+				>
+					<FaHighlighter size={16} />
+				</ToolbarButton>
+				<ToolbarButton
+					onClick={() => dispatch(takeSnapshot())}
+					title={UI_TEXT.SNAPSHOT}
+				>
+					<FaCamera size={16} />
+				</ToolbarButton>
 			</div>
 		</div>
 	);

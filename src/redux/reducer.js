@@ -1,3 +1,4 @@
+import { TOOLS, DEFAULTS } from '../constants';
 import {
 	START_SHARE_SUCCESS,
 	START_SHARE_FAILURE,
@@ -7,16 +8,20 @@ import {
 	SET_STROKE_WIDTH,
 	ADD_STROKE,
 	UNDO,
+	CLEAR_CANVAS,
+	TOGGLE_ANNOTATION,
+	TAKE_SNAPSHOT,
 } from './actions';
 
 const initialState = {
 	isSharing: false,
 	stream: null,
 	error: null,
-	tool: 'pen',
-	color: 'red',
-	strokeWidth: 5,
+	tool: TOOLS.PEN,
+	color: DEFAULTS.COLOR,
+	strokeWidth: DEFAULTS.STROKE_WIDTH,
 	history: [],
+	isAnnotationMode: true,
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -57,6 +62,18 @@ const rootReducer = (state = initialState, action) => {
 				...state,
 				history: state.history.slice(0, -1),
 			};
+		case CLEAR_CANVAS:
+			return {
+				...state,
+				history: [],
+			};
+		case TOGGLE_ANNOTATION:
+			return {
+				...state,
+				isAnnotationMode: !state.isAnnotationMode,
+			};
+		case TAKE_SNAPSHOT:
+			return { ...state, snapshotTrigger: Date.now() };
 		default:
 			return state;
 	}
