@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ScreenSharePreview from './ScreenSharePreview';
 import CanvasOverlay from './CanvasOverlay';
-
+import { useSelector } from 'react-redux';
+import { exportCompositeImage } from '../utils/exportImage';
+import { DOM_IDS } from '../constants';
 const StreamContainer = () => {
+	const { isAnnotationMode } = useSelector((state) => state);
+	const { snapshotTrigger } = useSelector((state) => state);
+
+	const videoId = DOM_IDS.VIDEO;
+	const canvasId = DOM_IDS.CANVAS;
+
+	useEffect(() => {
+		if (snapshotTrigger) {
+			const video = document.getElementById(videoId);
+			const canvas = document.getElementById(canvasId);
+			if (video && canvas) {
+				exportCompositeImage(video, canvas);
+			}
+		}
+	}, [snapshotTrigger]);
+
 	return (
 		<div
 			style={{
@@ -34,7 +52,10 @@ const StreamContainer = () => {
 						zIndex: 1,
 					}}
 				>
-					<ScreenSharePreview style={{ width: '100%', height: '100%' }} />
+					<ScreenSharePreview
+						id={videoId}
+						style={{ width: '100%', height: '100%' }}
+					/>
 				</div>
 
 				{/* Layer 2: The Canvas (Top) */}
@@ -46,10 +67,10 @@ const StreamContainer = () => {
 						width: '100%',
 						height: '100%',
 						zIndex: 2,
-						pointerEvents: 'auto',
+						pointerEvents: isAnnotationMode ? 'auto' : 'none',
 					}}
 				>
-					<CanvasOverlay />
+					<CanvasOverlay id={canvasId} />
 				</div>
 			</div>
 		</div>

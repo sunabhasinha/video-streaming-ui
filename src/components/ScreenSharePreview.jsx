@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { stopShareRequest } from '../redux/actions'; // Import the action
 
-const ScreenSharePreview = () => {
+const ScreenSharePreview = ({ id }) => {
 	const videoRef = useRef(null);
 	const dispatch = useDispatch();
 	const { stream } = useSelector((state) => state);
@@ -30,6 +30,7 @@ const ScreenSharePreview = () => {
 
 	return (
 		<video
+			id={id}
 			ref={videoRef}
 			style={{ width: '100%', height: '100%', objectFit: 'contain' }}
 			autoPlay

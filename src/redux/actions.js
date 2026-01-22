@@ -12,6 +12,9 @@ export const SET_STROKE_WIDTH = 'SET_STROKE_WIDTH';
 
 export const ADD_STROKE = 'ADD_STROKE';
 export const UNDO = 'UNDO';
+export const CLEAR_CANVAS = 'CLEAR_CANVAS';
+export const TOGGLE_ANNOTATION = 'TOGGLE_ANNOTATION';
+export const TAKE_SNAPSHOT = 'TAKE_SNAPSHOT';
 
 // Actions Creators
 export const startShareRequest = () => ({ type: START_SHARE_REQUEST });
@@ -38,3 +41,6 @@ export const setStrokeWidth = (width) => ({
 
 export const addStroke = (stroke) => ({ type: ADD_STROKE, payload: stroke });
 export const undo = () => ({ type: UNDO });
+export const clearCanvas = () => ({ type: CLEAR_CANVAS });
+export const toggleAnnotation = () => ({ type: TOGGLE_ANNOTATION });
+export const takeSnapshot = () => ({ type: TAKE_SNAPSHOT });
