@@ -4,6 +4,9 @@ A professional, frontend-only screen sharing application that allows real-time
 annotation over a video stream. Built with React, Redux-Saga, and the native
 Media Devices API, focusing on performance, scalability, and clean architecture.
 
+## 🧩 Architecture & Data Flow
+<img width="1095" height="534" alt="Screenshot 2026-01-23 at 12 11 33 PM" src="https://github.com/user-attachments/assets/1cf662df-452f-4f78-b620-c9d600198d66" />
+
 ## 🚀 Features
 
 - **Screen Sharing:** Low-latency streaming via
@@ -35,7 +38,7 @@ This project is self-contained and requires no backend server.
 1.  **Clone the Repository**
 
     ```bash
-    git clone <repository-url>
+    git clone [repository-url](https://github.com/sunabhasinha/video-streaming-ui.git)
     cd video-streaming-ui
     ```
 
