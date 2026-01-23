@@ -1,38 +1,42 @@
-# Screen Share Annotation Tool (Frontend)
+# Genea Annotation Tool
 
-A frontend-only application that allows users to share their screen and annotate
-over it in real-time. Built with a custom Webpack configuration, React, and
-Redux-Saga, emphasizing scalable architecture and performance.
+A professional, frontend-only screen sharing application that allows real-time
+annotation over a video stream. Built with React, Redux-Saga, and the native
+Media Devices API, focusing on performance, scalability, and clean architecture.
 
 ## 🚀 Features
 
-- **Screen Sharing:** Low-latency screen streaming using the `MediaDevices` API.
-- **Real-time Annotation:** Draw over any shared screen/window using a
-  transparent canvas overlay.
-- **Drawing Tools:**
-  - **Pen:** Customizable color and stroke width.
-  - **Eraser:** Removes specific strokes.
-  - **Undo:** "Time-travel" capability to undo the last action.
-- **Responsive Architecture:** Canvas coordinates are normalized, ensuring
-  drawings stay aligned even if the browser window is resized.
-- **State Management:** Complete separation of concerns using Redux for state
-  and Redux-Saga for side effects (media handling).
+- **Screen Sharing:** Low-latency streaming via
+  `navigator.mediaDevices.getDisplayMedia`.
+- **Advanced Annotation:**
+  - **Tools:** Pen, Highlighter (transparent), Eraser, Rectangle, Arrow.
+  - **Styles:** Customizable stroke color and width.
+  - **Modes:** Toggle between "View Mode" (interact with screen) and "Draw Mode"
+    (annotate).
+- **Smart Features:**
+  - **Undo/Clear:** Full state history management.
+  - **Snapshots:** Export the combined video + canvas frame as a PNG.
+  - **Shortcuts:** Press `d` to toggle annotation mode.
+- **Responsive:** Vector-based scaling ensures drawings stay aligned when the
+  window resizes.
 
 ## 🛠️ Tech Stack
 
-- **Core:** React 18, HTML5 Canvas
-- **State Management:** Redux, React-Redux
-- **Side Effects:** Redux-Saga (for handling async streams and permissions)
-- **Build Tooling:** Custom Webpack 5 & Babel setup (No `create-react-app`)
-- **Styling:** CSS Modules / Standard CSS
+- **Core:** React 18
+- **State Management:** Redux (Global State) + Redux-Saga (Side Effects/Async)
+- **Graphics:** HTML5 Canvas API (2D Context)
+- **Build System:** Custom Webpack 5 Configuration (No `create-react-app`)
+- **Styling:** CSS Modules, Glassmorphism UI, React Icons
 
 ## ⚙️ Setup & Installation
 
-1.  **Clone the repository**
+This project is self-contained and requires no backend server.
+
+1.  **Clone the Repository**
 
     ```bash
     git clone <repository-url>
-    cd <repository-folder>
+    cd video-streaming-ui
     ```
 
 2.  **Install Dependencies**
@@ -47,48 +51,85 @@ Redux-Saga, emphasizing scalable architecture and performance.
     npm start
     ```
 
-    - The app will open at `http://localhost:3000`.
+    - The application will launch at `http://localhost:3000`.
 
 4.  **Build for Production**
     ```bash
     npm run build
     ```
-    - Output files will be generated in the `/dist` folder.
+    - Optimized assets will be generated in the `/dist` folder.
 
-## 🏗️ Architectural Decisions
+## 🎨 Canvas Layering & Scaling Approach
 
-### 1. Canvas Layering Strategy ("The Sandwich")
+To achieve high-performance annotation without altering the video stream, I
+implemented a **"Sandwich Architecture"**:
 
-To enable drawing _over_ a video stream without affecting the video data itself,
-I implemented a layering strategy:
+### 1. The Layering Strategy
 
-- **Layer 1 (Bottom):** The `<video>` element displaying the `MediaStream`.
-- **Layer 2 (Top):** The `<canvas>` element, absolutely positioned to strictly
-  match the video's dimensions.
-- **Result:** The user sees a unified interface, but the drawing logic is
-  decoupled from the media rendering.
+We use CSS absolute positioning to stack two distinct elements:
 
-### 2. Handling Resizing (Coordinate Normalization)
+- **Bottom Layer (`z-index: 1`):** The `<video>` element rendering the live
+  `MediaStream`.
+- **Top Layer (`z-index: 2`):** A transparent `<canvas>` element.
 
-A common challenge in canvas apps is "drifting annotations" when the window
-resizes.
+This decouples the rendering logic. The video plays natively while the canvas
+handles the graphics. A "Pointer Events" toggle (`pointer-events: none`) allows
+clicks to pass through to the video layer when "View Mode" is active.
 
-- **Problem:** Storing coordinates as raw pixels (e.g., `x: 400`) causes
-  misalignment when the video scales down.
-- **Solution:** I implemented a **Normalization Engine**.
-  - **Input:** User clicks at `400px` on an `800px` wide screen.
-  - **Storage:** We store `x: 0.5` (50%) in Redux.
-  - **Render:** On every render/resize, we calculate `currentWidth * 0.5`.
-  - **Benefit:** Annotations are fully responsive and maintain their relative
-    position on any screen size.
+### 2. The Scaling Strategy (Normalized Coordinates)
+
+A common challenge in canvas apps is "drifting annotations" during window
+resizing.
+
+- **Problem:** Storing coordinates as pixels (e.g., `x: 500`) breaks when the
+  video shrinks to `400px` width.
+- **Solution:** I implemented a **Coordinate Normalization Engine**
+  (`src/utils/canvasMath.js`).
+  - **Input:** When a user draws, we convert pixels to **percentages** (0.0 to
+    1.0) relative to the container size.
+  - **Storage:** Redux stores these normalized points (`x: 0.5`, `y: 0.5`).
+  - **Render:** On every frame/resize, the `CanvasRenderer` calculates the
+    actual pixel position based on the _current_ container dimensions
+    (`x = 0.5 * currentWidth`).
+- **Result:** Annotations scale geometrically and remain perfectly anchored to
+  their video content on any screen size.
+
+## 🏗️ Key Architectural Decisions
+
+### 1. Separation of Logic vs. UI (Custom Hooks)
+
+Instead of a "God Component," I extracted the complex canvas logic into
+`useCanvas.js`.
+
+- **Benefit:** The UI component (`CanvasOverlay.jsx`) is thin and declarative.
+  The math (`canvasMath.js`) and rendering (`canvasRenderer.js`) are pure
+  functions, making them unit-testable and reusable.
+
+### 2. Performance Optimization (Ref Pattern)
+
+React's `useState` triggers a re-render on every update. For drawing (which
+fires ~60 events per second), this causes lag ("jank").
+
+- **Decision:** I used `useRef` to store the high-frequency mouse coordinates
+  during a stroke.
+- **Result:** The component **does not re-render** while drawing. We only
+  dispatch to Redux once the stroke is finished (Mouse Up), ensuring 60 FPS
+  performance even on lower-end devices.
 
 ### 3. Redux-Saga for Side Effects
 
-Instead of cluttering UI components with API calls (`navigator.mediaDevices`), I
-moved all "impure" logic to Sagas.
+Handling media streams and timers (for disappearing ink) inside React components
+leads to "zombie" streams and memory leaks.
 
-- **Component:** Dispatches `START_SHARE_REQUEST`.
-- **Saga:** Intercepts the action, calls the browser API, handles permission
-  errors, and dispatches `START_SHARE_SUCCESS`.
-- **Benefit:** This makes the components pure, easier to test, and prevents
-  "zombie" streams (streams that stay alive after the component unmounts).
+- **Decision:** All "impure" actions are handled by Sagas.
+- **Example:** When `START_SHARE_REQUEST` is dispatched, a Saga calls
+  `navigator.mediaDevices`, handles permission errors, and safely stores the
+  stream. This keeps the UI pure and predictable.
+
+### 4. Component Composition
+
+The Toolbar is broken down into atomic, reusable units (`ToolbarButton`,
+`ToggleSwitch`).
+
+- **Benefit:** Consistent styling, centralized accessibility logic
+  (`aria-labels`, tooltips), and easier maintenance.
