@@ -11,16 +11,13 @@ export const useCanvas = () => {
 	const dispatch = useDispatch();
 
 	// OPTIMIZATION: Use Ref instead of State for high-frequency updates
-	// This prevents React from re-rendering 60 times a second while drawing.
 	const currentPointsRef = useRef([]);
 
 	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 	const [isDrawing, setIsDrawing] = useState(false);
 
-	// Redux State
 	const { tool, color, strokeWidth, history } = useSelector((state) => state);
 
-	// 1. Resize Observer (Keeps canvas sharp)
 	useEffect(() => {
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (let entry of entries) {
@@ -32,7 +29,6 @@ export const useCanvas = () => {
 		return () => resizeObserver.disconnect();
 	}, []);
 
-	// 2. History Re-render (Only runs when history changes)
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (canvas) {
@@ -44,7 +40,6 @@ export const useCanvas = () => {
 		}
 	}, [history, dimensions]);
 
-	// 3. Mouse Handlers
 	const startDrawing = useCallback(
 		({ nativeEvent }) => {
 			const { px, pct } = getPointFromEvent(
@@ -54,10 +49,8 @@ export const useCanvas = () => {
 			);
 			setIsDrawing(true);
 
-			// Reset the Ref Buffer
 			currentPointsRef.current = [pct];
 
-			// Visual Feedback (Dot)
 			const ctx = canvasRef.current.getContext('2d');
 			ctx.beginPath();
 			ctx.fillStyle = tool === TOOLS.ERASER ? 'rgba(0,0,0,1)' : color;
@@ -76,10 +69,8 @@ export const useCanvas = () => {
 				dimensions.height
 			);
 
-			// OPTIMIZATION: Push to Ref (No Re-render)
 			currentPointsRef.current.push(pct);
 
-			// Live Render (Direct DOM Manipulation)
 			const ctx = canvasRef.current.getContext('2d');
 			ctx.lineCap = 'round';
 			ctx.lineJoin = 'round';
@@ -90,11 +81,8 @@ export const useCanvas = () => {
 					? COMPOSITE_OPS.DESTINATION_OUT
 					: COMPOSITE_OPS.SOURCE_OVER;
 
-			// Connect previous point to current point
-			// We grab the previous point directly from the Ref
 			const pointsBuffer = currentPointsRef.current;
-			const lastPointPercent = pointsBuffer[pointsBuffer.length - 2]; // Get second to last
-
+			const lastPointPercent = pointsBuffer[pointsBuffer.length - 2];
 			if (lastPointPercent) {
 				const lastPointPx = toPx(
 					lastPointPercent,
@@ -114,7 +102,6 @@ export const useCanvas = () => {
 		if (!isDrawing) return;
 		setIsDrawing(false);
 
-		// Read from the Ref Buffer
 		const points = currentPointsRef.current;
 
 		if (points.length > 0) {
@@ -123,12 +110,11 @@ export const useCanvas = () => {
 					tool,
 					color,
 					width: strokeWidth,
-					points: points, // Send the buffered points to Redux
+					points: points,
 				})
 			);
 		}
 
-		// Clear Buffer
 		currentPointsRef.current = [];
 	}, [isDrawing, tool, color, strokeWidth, dispatch]);
 

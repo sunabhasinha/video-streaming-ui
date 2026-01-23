@@ -28,7 +28,6 @@ const Main = () => {
 						<StreamContainer />
 					</div>
 				) : (
-					// --- CREATIVE EMPTY STATE ---
 					<div className="placeholder">
 						<div className="floating-icon">
 							<FaMagic size={60} />
@@ -47,7 +46,6 @@ const Main = () => {
 							<FaArrowDown />
 						</div>
 					</div>
-					// -----------------------------
 				)}
 			</div>
 

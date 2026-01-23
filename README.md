@@ -98,8 +98,7 @@ resizing.
 
 ### 1. Separation of Logic vs. UI (Custom Hooks)
 
-Instead of a "God Component," I extracted the complex canvas logic into
-`useCanvas.js`.
+I extracted the complex canvas logic into `useCanvas.js`.
 
 - **Benefit:** The UI component (`CanvasOverlay.jsx`) is thin and declarative.
   The math (`canvasMath.js`) and rendering (`canvasRenderer.js`) are pure
@@ -133,3 +132,7 @@ The Toolbar is broken down into atomic, reusable units (`ToolbarButton`,
 
 - **Benefit:** Consistent styling, centralized accessibility logic
   (`aria-labels`, tooltips), and easier maintenance.
+
+```
+
+```

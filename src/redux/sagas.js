@@ -23,7 +23,6 @@ function* handleStartShare() {
 	}
 }
 
-/**FIX: Physically stop the stream in the Saga */
 function* handleStopShare() {
 	try {
 		const stream = yield select((state) => state.stream);

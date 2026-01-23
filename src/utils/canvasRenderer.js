@@ -34,7 +34,6 @@ export const drawStroke = (ctx, stroke, width, height) => {
 	ctx.lineCap = 'round';
 	ctx.lineJoin = 'round';
 
-	// 1. Configure Context based on Tool
 	if (stroke.tool === TOOLS.HIGHLIGHTER) {
 		ctx.lineWidth = stroke.width * DEFAULTS.HIGHLIGHTER_WIDTH_MULTIPLIER;
 		ctx.globalAlpha = DEFAULTS.HIGHLIGHTER_OPACITY;
