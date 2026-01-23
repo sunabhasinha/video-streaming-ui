@@ -1,4 +1,3 @@
-// src/hooks/useCanvas.js
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addStroke } from '../redux/actions';
@@ -11,15 +10,14 @@ export const useCanvas = () => {
 	const containerRef = useRef(null);
 	const dispatch = useDispatch();
 
-	// State
+	// OPTIMIZATION: Use Ref instead of State for high-frequency updates
+	const currentPointsRef = useRef([]);
+
 	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 	const [isDrawing, setIsDrawing] = useState(false);
-	const [currentPoints, setCurrentPoints] = useState([]);
 
-	// Redux State
 	const { tool, color, strokeWidth, history } = useSelector((state) => state);
 
-	// 1. Resize Observer Logic
 	useEffect(() => {
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (let entry of entries) {
@@ -31,7 +29,6 @@ export const useCanvas = () => {
 		return () => resizeObserver.disconnect();
 	}, []);
 
-	// 2. History Re-render Logic
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (canvas) {
@@ -43,7 +40,6 @@ export const useCanvas = () => {
 		}
 	}, [history, dimensions]);
 
-	// 3. Mouse Handlers
 	const startDrawing = useCallback(
 		({ nativeEvent }) => {
 			const { px, pct } = getPointFromEvent(
@@ -52,9 +48,9 @@ export const useCanvas = () => {
 				dimensions.height
 			);
 			setIsDrawing(true);
-			setCurrentPoints([pct]);
 
-			// Draw initial dot
+			currentPointsRef.current = [pct];
+
 			const ctx = canvasRef.current.getContext('2d');
 			ctx.beginPath();
 			ctx.fillStyle = tool === TOOLS.ERASER ? 'rgba(0,0,0,1)' : color;
@@ -73,10 +69,8 @@ export const useCanvas = () => {
 				dimensions.height
 			);
 
-			// Add point to local state
-			setCurrentPoints((prev) => [...prev, pct]);
+			currentPointsRef.current.push(pct);
 
-			// Live Render
 			const ctx = canvasRef.current.getContext('2d');
 			ctx.lineCap = 'round';
 			ctx.lineJoin = 'round';
@@ -87,9 +81,8 @@ export const useCanvas = () => {
 					? COMPOSITE_OPS.DESTINATION_OUT
 					: COMPOSITE_OPS.SOURCE_OVER;
 
-			// Connect previous point to current point
-			const lastPointPercent = currentPoints[currentPoints.length - 1];
-			// Guard clause: ensure we have a last point
+			const pointsBuffer = currentPointsRef.current;
+			const lastPointPercent = pointsBuffer[pointsBuffer.length - 2];
 			if (lastPointPercent) {
 				const lastPointPx = toPx(
 					lastPointPercent,
@@ -102,29 +95,32 @@ export const useCanvas = () => {
 				ctx.stroke();
 			}
 		},
-		[isDrawing, dimensions, currentPoints, strokeWidth, color, tool]
+		[isDrawing, dimensions, strokeWidth, color, tool]
 	);
 
 	const stopDrawing = useCallback(() => {
 		if (!isDrawing) return;
 		setIsDrawing(false);
 
-		if (currentPoints.length > 0) {
+		const points = currentPointsRef.current;
+
+		if (points.length > 0) {
 			dispatch(
 				addStroke({
 					tool,
 					color,
 					width: strokeWidth,
-					points: currentPoints,
+					points: points,
 				})
 			);
 		}
-		setCurrentPoints([]);
-	}, [isDrawing, currentPoints, tool, color, strokeWidth, dispatch]);
+
+		currentPointsRef.current = [];
+	}, [isDrawing, tool, color, strokeWidth, dispatch]);
 
 	return {
 		refs: { canvasRef, containerRef },
-		state: { dimensions, tool, color, strokeWidth },
+		state: { dimensions, tool },
 		handlers: { startDrawing, draw, stopDrawing },
 	};
 };

@@ -34,7 +34,7 @@ export const DEFAULTS = {
 
 // UI Tooltips/Titles
 export const UI_TEXT = {
-	TOGGLE_MODE: 'Toggle Annotation Mode',
+	TOGGLE_MODE: 'Toggle Annotation Mode (d)',
 	PEN_TOOL: 'Pen Tool',
 	ERASER_TOOL: 'Eraser Tool',
 	HIGHLIGHTER_TOOL: 'Highlighter',
@@ -46,4 +46,8 @@ export const UI_TEXT = {
 	TEMP_MODE: 'Disappearing Ink (3s)',
 	START_SHARE: 'Start Sharing',
 	STOP_SHARE: 'Stop Sharing',
+};
+
+export const SHORTCUTS = {
+	TOGGLE_ANNOTATION: 'd',
 };

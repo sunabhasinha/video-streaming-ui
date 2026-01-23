@@ -1,5 +1,3 @@
-// src/utils/canvasMath.js
-
 export const toPx = (point, width, height) => ({
 	x: point.x * width,
 	y: point.y * height,

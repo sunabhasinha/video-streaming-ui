@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { stopShareRequest } from '../redux/actions'; // Import the action
+import { stopShareRequest } from '../redux/actions';
 
 const ScreenSharePreview = ({ id }) => {
 	const videoRef = useRef(null);
